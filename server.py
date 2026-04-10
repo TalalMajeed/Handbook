@@ -6,17 +6,26 @@ from typing import Iterator
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, TextIteratorStreamer
+
+from pipeline import HandbookPipeline
 
 
 BASE_DIR = Path(__file__).resolve().parent
 INTERFACE_DIR = BASE_DIR / "interface"
+MODEL_DIR = BASE_DIR / "handbook-1.0"
+
 
 app = FastAPI()
+
 app.mount("/static", StaticFiles(directory=INTERFACE_DIR), name="static")
 
-tokenizer = AutoTokenizer.from_pretrained("handbook-1.0")
-model = AutoModelForSeq2SeqLM.from_pretrained("handbook-1.0")
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_DIR)
+
+pipeline = HandbookPipeline(str(MODEL_DIR))
 
 
 @app.get("/")
@@ -38,10 +47,32 @@ def stream_generation(prompt: str) -> Iterator[str]:
     yield sse_event("start", "starting")
 
     try:
-        inputs = tokenizer(prompt, return_tensors="pt")
-        streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+        docs = pipeline.retrieve(prompt)
 
-        def run_generation() -> None:
+        context = "\n\n".join(docs)
+
+        if not context.strip():
+            final_prompt = f"Question: {prompt}\nAnswer:"
+        else:
+            final_prompt = f"""
+Answer strictly from context.
+
+Context:
+{context}
+
+Question: {prompt}
+Answer:
+"""
+
+        inputs = tokenizer(final_prompt, return_tensors="pt")
+
+        streamer = TextIteratorStreamer(
+            tokenizer,
+            skip_prompt=True,
+            skip_special_tokens=True
+        )
+
+        def run_generation():
             model.generate(
                 **inputs,
                 streamer=streamer,
@@ -58,7 +89,9 @@ def stream_generation(prompt: str) -> Iterator[str]:
                 yield sse_event("delta", chunk)
 
         thread.join()
+
         yield sse_event("done", "finished")
+
     except Exception as exc:
         yield sse_event("error", json.dumps({"message": str(exc)}))
 
