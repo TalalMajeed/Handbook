@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.ipynb_checkpoints
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+.idea/
+.vscode/
+*.pyc
+*.pyo
+*.pyd
+handbook-1.0
