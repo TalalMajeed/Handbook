@@ -3,11 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Handbook | Chatbot for NUST Student Queries</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Handbook</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div>Coming Soon</div>
-    <script src="/logic.js"></script>
+    <div class="topbar-wrap"><header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div id="statusDot" class="status-dot status-ready" title="Ready"></div>
+            <span class="topbar-title">Handbook-1.0</span>
+        </div>
+        <button id="clearBtn" class="clear-btn" type="button">Clear</button>
+    </header></div>
+    <main class="app">
+        <div id="chatLog" class="chat-log" aria-live="polite" aria-label="Chat conversation"></div>
+        <form id="chatForm" class="composer">
+            <textarea id="promptInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
+            <button id="sendBtn" class="send-btn" type="submit">
+                <svg class="send-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/>
+                </svg>
+            </button>
+        </form>
+    </main>
+    <script src="/static/logic.js"></script>
 </body>
 </html>
