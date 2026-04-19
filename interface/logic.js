@@ -1,16 +1,16 @@
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const chatLog        = document.getElementById("chatLog");
-const chatForm       = document.getElementById("chatForm");
-const promptInput    = document.getElementById("promptInput");
-const sendBtn        = document.getElementById("sendBtn");
-const clearBtn       = document.getElementById("clearBtn");
-const statusDot      = document.getElementById("statusDot");
-const evidenceList   = document.getElementById("evidenceList");
+const chatLog = document.getElementById("chatLog");
+const chatForm = document.getElementById("chatForm");
+const promptInput = document.getElementById("promptInput");
+const sendBtn = document.getElementById("sendBtn");
+const clearBtn = document.getElementById("clearBtn");
+const statusDot = document.getElementById("statusDot");
+const evidenceList = document.getElementById("evidenceList");
 const evidenceMethod = document.getElementById("evidenceMethod");
-const chunkModal     = document.getElementById("chunkModal");
-const modalClose     = document.getElementById("modalClose");
-const modalMeta      = document.getElementById("modalMeta");
-const modalBody      = document.getElementById("modalBody");
+const chunkModal = document.getElementById("chunkModal");
+const modalClose = document.getElementById("modalClose");
+const modalMeta = document.getElementById("modalMeta");
+const modalBody = document.getElementById("modalBody");
 
 let activeSource = null;
 
@@ -69,7 +69,6 @@ function createTyping() {
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
 function openModal(chunk) {
-    // Populate meta badges
     const srcLabel = (chunk.source || "handbook").replace(/\.pdf$/i, "");
     modalMeta.innerHTML = `
         <span class="chunk-rank">#${chunk.rank}</span>
@@ -80,7 +79,6 @@ function openModal(chunk) {
         <span class="method-badge">${escapeHtml(chunk.method || "hybrid")}</span>
         <span class="chunk-score">score: ${chunk.score}</span>
     `;
-    // Full text — no truncation
     modalBody.textContent = chunk.fullText || chunk.text || "";
     chunkModal.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -92,12 +90,8 @@ function closeModal() {
 }
 
 modalClose.addEventListener("click", closeModal);
-chunkModal.addEventListener("click", (e) => {
-    if (e.target === chunkModal) closeModal();
-});
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-});
+chunkModal.addEventListener("click", (e) => { if (e.target === chunkModal) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
 // ── Evidence panel ────────────────────────────────────────────────────────────
 
@@ -125,9 +119,9 @@ function renderEvidence(chunks) {
         card.setAttribute("tabindex", "0");
         card.setAttribute("title", "Click to view full text");
 
-        const srcLabel    = (chunk.source || "handbook").replace(/\.pdf$/i, "");
+        const srcLabel = (chunk.source || "handbook").replace(/\.pdf$/i, "");
         const previewText = chunk.preview || (chunk.text || "").slice(0, 260);
-        const needsMore   = (chunk.text || "").length > 260;
+        const needsMore = (chunk.text || "").length > 260;
 
         card.innerHTML = `
             <div class="chunk-meta-row">
@@ -140,12 +134,9 @@ function renderEvidence(chunks) {
             <div class="chunk-open-hint">&#8599; Click to read full text</div>
         `;
 
-        // Store full text on the object for the modal
         chunk.fullText = chunk.text || "";
-
-        card.addEventListener("click",  () => openModal(chunk));
+        card.addEventListener("click", () => openModal(chunk));
         card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") openModal(chunk); });
-
         evidenceList.appendChild(card);
     });
 }
@@ -164,8 +155,9 @@ chatForm.addEventListener("submit", (e) => {
     promptInput.value = "";
     autoResize();
 
+    // assistantMsg is created immediately so tokens stream into it
     const assistantMsg = createMessage("assistant", "");
-    const typing       = createTyping();
+    const typing = createTyping();
     setBusy(true);
     setStatus("connecting", "Connecting…");
 
@@ -184,15 +176,36 @@ chatForm.addEventListener("submit", (e) => {
         setStatus("streaming", "Streaming…");
     });
 
+    // FIX 5: handle the "replace" event emitted when the raw answer is garbage.
+    // The server has already detected a 1-word / garbage output and sends back
+    // a grounded fallback. We replace the streamed content entirely.
+    src.addEventListener("replace", (ev) => {
+        const corrected = ev.data ?? "";
+        if (corrected) {
+            assistantMsg.textContent = corrected;
+            scrollBottom();
+        }
+    });
+
     src.addEventListener("sources", (ev) => {
         try {
             const chunks = JSON.parse(ev.data);
             renderEvidence(chunks);
-        } catch (_) { /* ignore */ }
+        } catch (_) { /* ignore malformed JSON */ }
     });
 
     src.addEventListener("done", () => {
         typing.remove();
+
+        // Final guard: if after streaming the message is still empty or too
+        // short, show a safe fallback rather than leaving a blank bubble.
+        const text = (assistantMsg.textContent || "").trim();
+        if (text.length < 8) {
+            assistantMsg.textContent =
+                "I could not generate a complete answer. " +
+                "Please check the retrieved evidence on the right for the relevant handbook section.";
+        }
+
         src.close();
         activeSource = null;
         setStatus("ready", "Ready");
