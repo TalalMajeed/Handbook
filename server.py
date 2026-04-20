@@ -469,6 +469,11 @@ def index() -> FileResponse:
     return FileResponse(INTERFACE_DIR / "index.html")
 
 
+@app.get("/workflow")
+def workflow() -> FileResponse:
+    return FileResponse(INTERFACE_DIR / "workflow.html")
+
+
 @app.get("/retrieve")
 def retrieve(prompt: str = Query(..., min_length=1)) -> JSONResponse:
     docs = retrieval_pipeline.retrieve(prompt)

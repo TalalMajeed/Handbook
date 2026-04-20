@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Workflow — Handbook QA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:        #080b12;
+  --surface:   #0e1420;
+  --surface2:  #141c2e;
+  --border:    #1e2d47;
+  --accent:    #3b82f6;
+  --accent2:   #06b6d4;
+  --accent3:   #8b5cf6;
+  --gold:      #f59e0b;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --dim:       #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Animated grid background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Navbar ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  background: rgba(8,11,18,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-links a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.nav-links a:hover { color: var(--text); background: var(--surface2); }
+.nav-links a.active { color: var(--accent); background: rgba(59,130,246,0.1); }
+
+/* ── Page layout ── */
+.page {
+  padding-top: 80px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero section ── */
+.hero {
+  text-align: center;
+  padding: 48px 24px 40px;
+}
+
+.hero-tag {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 600;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #e2e8f0 30%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  color: var(--dim);
+  font-size: 15px;
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+
+/* ── Tab switcher ── */
+.tab-bar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.tab-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.tab-btn:hover { color: var(--text); border-color: var(--accent); }
+.tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Control bar ── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.run-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 32px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 24px rgba(59,130,246,0.35);
+}
+
+.run-btn:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 0 36px rgba(59,130,246,0.5); }
+.run-btn:active { transform: translateY(0); }
+
+.run-btn .icon {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.speed-control select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.progress-bar-wrap {
+  width: 260px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+/* ── Step counter ── */
+.step-counter {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.step-counter span {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* ── Timeline container ── */
+.timeline {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  position: relative;
+}
+
+/* vertical line */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 50px;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--border) 5%, var(--border) 95%, transparent);
+}
+
+/* ── Step card ── */
+.step-card {
+  position: relative;
+  margin-bottom: 16px;
+  padding-left: 90px;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.step-card.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* dot on timeline */
+.step-dot {
+  position: absolute;
+  left: 38px;
+  top: 24px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  transition: all 0.4s;
+  z-index: 2;
+}
+
+.step-card.active .step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(59,130,246,0.6);
+}
+
+.step-card.done .step-dot {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+/* card body */
+.card-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.step-card.active .card-body {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.2), 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.step-card.done .card-body {
+  border-color: rgba(16,185,129,0.3);
+}
+
+/* card header */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.card-title-wrap { flex: 1; }
+
+.card-phase {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-chevron {
+  font-size: 12px;
+  color: var(--muted);
+  transition: transform 0.3s;
+}
+
+.card-body.expanded .card-chevron { transform: rotate(180deg); }
+
+/* card content */
+.card-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.card-content.open { max-height: 800px; }
+
+.card-inner {
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.card-desc {
+  color: var(--dim);
+  font-size: 14px;
+  line-height: 1.75;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Detail boxes inside cards */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.detail-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.detail-box-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.detail-box-val {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.tag-blue  { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+.tag-green { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
+.tag-amber { color: #fbbf24; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.08); }
+.tag-purple{ color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+.tag-red   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+
+/* animated data-flow bar */
+.flow-bar {
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  margin: 10px 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.6s ease 0.2s;
+}
+
+.step-card.active .flow-bar { transform: scaleX(1); }
+
+/* formula */
+.formula {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--accent2);
+  margin-top: 12px;
+  line-height: 1.8;
+}
+
+/* analogy box */
+.analogy {
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #fcd34d;
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.analogy-icon { flex-shrink: 0; font-size: 16px; }
+
+/* mini step list */
+.mini-steps { margin-top: 12px; }
+.mini-step {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--dim);
+  align-items: flex-start;
+}
+
+.mini-step:last-child { border-bottom: none; }
+
+.mini-step-num {
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* scanning animation */
+@keyframes scan {
+  0%   { opacity: 1; transform: translateX(0); }
+  50%  { opacity: 0.4; transform: translateX(6px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.scanning { animation: scan 1.5s ease infinite; }
+
+/* pulse dot */
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+  50%      { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+}
+
+.step-card.active .step-dot { animation: pulse-dot 1.5s ease infinite; }
+
+/* done checkmark */
+.done-check {
+  display: none;
+  color: var(--green);
+  font-size: 13px;
+  margin-left: auto;
+}
+.step-card.done .done-check { display: block; }
+
+/* ── Final answer preview ── */
+.answer-preview {
+  background: var(--surface2);
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.7;
+}
+
+.answer-preview strong { color: var(--green); }
+
+/* ── Completion banner ── */
+.completion-banner {
+  text-align: center;
+  padding: 32px 24px;
+  margin: 0 auto 80px;
+  max-width: 900px;
+  padding-left: calc(90px + 24px);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+
+.completion-banner.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.completion-banner h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.completion-banner p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* mobile */
+@media (max-width: 600px) {
+  .timeline::before { left: 22px; }
+  .step-card { padding-left: 52px; }
+  .step-dot { left: 9px; width: 22px; height: 22px; font-size: 9px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  nav { padding: 0 16px; }
+  .nav-links a { padding: 6px 8px; font-size: 11px; }
+  .hero h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav>
+  <a href="/" class="nav-brand">HANDBOOK_QA</a>
+  <div class="nav-links">
+    <a href="/">Chat</a>
+    <a href="/workflow" class="active">Workflow</a>
+  </div>
+</nav>
+
+<!-- ── Page ── -->
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-tag">VISUAL EXPLAINER</div>
+    <h1>How the System Works</h1>
+    <p>A step-by-step animated walkthrough of every phase — from raw PDFs to your answer.</p>
+  </div>
+
+  <!-- Tab switcher -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('build')">Phase 1 — Building the Library</button>
+    <button class="tab-btn" onclick="switchTab('query')">Phase 2 — Answering a Query</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="run-btn" id="runBtn" onclick="startAnimation()">
+      <span class="icon">▶</span>
+      Run Walkthrough
+    </button>
+    <div class="speed-control">
+      Speed:
+      <select id="speedSel">
+        <option value="800">Slow</option>
+        <option value="400" selected>Normal</option>
+        <option value="150">Fast</option>
+      </select>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Step counter -->
+  <div class="step-counter" id="stepCounter">
+    Step <span id="curStep">0</span> / <span id="totalSteps">0</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 1 — BUILD INDEX
+  ══════════════════════════════════════════════ -->
+  <div id="tab-build" class="timeline">
+
+    <div class="step-card" id="b0">
+      <div class="step-dot">1</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b0')">
+          <div class="card-icon" style="background:rgba(59,130,246,0.12);">📄</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 1 · Data Ingestion</div>
+            <div class="card-title">Read the PDF Handbooks</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              We use <strong>PyMuPDF</strong> to extract all text from both PDF handbooks page by page — like copy-pasting the entire book into a text file. Both the UG handbook and PG handbook are processed together.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Think of this like scanning both books into a computer so the rest of the system can read them.</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Input files</div>
+                <div class="detail-box-val">ug-handbook.pdf<br>pg-handbook.pdf</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">What we get</div>
+                <div class="detail-box-val">Raw text per page + page number + source filename</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">PyMuPDF</span>
+              <span class="tag tag-green">~300+ pages total</span>
+              <span class="tag tag-amber">Both UG + PG</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b1">
+      <div class="step-dot">2</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b1')">
+          <div class="card-icon" style="background:rgba(239,68,68,0.12);">🧹</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 2 · Header Stripping</div>
+            <div class="card-title">Remove Garbage Text From Every Page</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              Every page had a running header like <em>"NUST Undergraduate Student Handbook 87"</em> embedded in the text. Since this appeared on every single page, it was polluting the search index — making the words "nust", "undergraduate", "handbook" appear in every chunk and destroying their search value. We strip all these headers before doing anything else.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Imagine if every page of a textbook had the title printed inside the paragraph — you'd have to remove that before indexing the actual content.</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">What we remove</div>
+                <div class="detail-box-val">"NUST * Student Handbook N"<br>Standalone page numbers<br>School name stamps</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">Why it matters</div>
+                <div class="detail-box-val">If every chunk has "nust student handbook", TF-IDF gives those words zero weight — they can't distinguish any chunk from another.</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-red">Bug we fixed</span>
+              <span class="tag tag-blue">strip_headers()</span>
+              <span class="tag tag-amber">regex pattern matching</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b2">
+      <div class="step-dot">3</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b2')">
+          <div class="card-icon" style="background:rgba(16,185,129,0.12);">✂️</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 3 · Chunking</div>
+            <div class="card-title">Cut Text Into Meaningful Pieces</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              We can't search the whole handbook at once. We cut it into small pieces called <strong>chunks</strong>, each 50–250 words. We use <strong>sentence-aware chunking</strong> — we accumulate complete sentences and only start a new chunk at a sentence boundary. One sentence overlaps between chunks so context is never lost.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Like cutting a book into index cards — but you only cut between paragraphs, never mid-sentence, so each card always contains complete ideas.</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Old method (broken)</div>
+                <div class="detail-box-val">300-word windows, 50% overlap — split rules mid-sentence so "CGPA is 2.75 for Engineering" ended up in two different chunks</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">New method (fixed)</div>
+                <div class="detail-box-val">Sentence-boundary cutting, 50–250 words, 1-sentence overlap — complete rules always stay in one chunk</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-green">~300+ chunks created</span>
+              <span class="tag tag-blue">50–250 words each</span>
+              <span class="tag tag-amber">1-sentence overlap</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b3">
+      <div class="step-dot">4</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b3')">
+          <div class="card-icon" style="background:rgba(139,92,246,0.12);">🔍</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 4 · SimHash Deduplication</div>
+            <div class="card-title">Remove Duplicate Chunks</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              Some handbook sections repeat content. We use <strong>SimHash</strong> to fingerprint every chunk and remove near-duplicates before indexing them.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Like a DNA test for text. Two chunks with very similar DNA (Hamming distance ≤ 3 bits) are considered duplicates — we keep only one.</span>
+            </div>
+            <div class="mini-steps">
+              <div class="mini-step"><div class="mini-step-num">1</div>For each chunk, tokenise into words</div>
+              <div class="mini-step"><div class="mini-step-num">2</div>MD5 hash each token → 64-bit binary number</div>
+              <div class="mini-step"><div class="mini-step-num">3</div>Build a 64-position accumulator: +1 if bit=1, -1 if bit=0</div>
+              <div class="mini-step"><div class="mini-step-num">4</div>Fingerprint = sign of each accumulator position</div>
+              <div class="mini-step"><div class="mini-step-num">5</div>Compare fingerprints: if Hamming distance ≤ 3 → duplicate → discard</div>
+            </div>
+            <div class="formula">Hamming distance = count of bit positions that differ<br>Threshold ≤ 3 bits → near-duplicate → remove</div>
+            <div class="tag-row">
+              <span class="tag tag-purple">SimHash</span>
+              <span class="tag tag-green">64-bit fingerprint</span>
+              <span class="tag tag-amber">Hamming distance ≤ 3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b4">
+      <div class="step-dot">5</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b4')">
+          <div class="card-icon" style="background:rgba(6,182,212,0.12);">🧠</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 5 · Sentence Embeddings</div>
+            <div class="card-title">Teach the Computer What Each Chunk Means</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              Words alone don't capture meaning. We use a pre-trained AI model <strong>all-MiniLM-L6-v2</strong> to convert each chunk into a list of 384 numbers called an <strong>embedding</strong>. Chunks with similar meanings get similar number-lists, even if they use completely different words.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Like giving every chunk GPS coordinates in "meaning space". Chunks about attendance are near each other. Chunks about fees are near each other. Far from chunks about, say, sports.</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Model used</div>
+                <div class="detail-box-val">all-MiniLM-L6-v2<br>(runs fully offline, no internet)</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">Output per chunk</div>
+                <div class="detail-box-val">384 numbers (a vector). Stored inside chunks.pkl for fast retrieval later.</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">384 dimensions</span>
+              <span class="tag tag-green">L2 normalised</span>
+              <span class="tag tag-purple">semantic similarity</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b5">
+      <div class="step-dot">6</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b5')">
+          <div class="card-icon" style="background:rgba(245,158,11,0.12);">📊</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 6 · PageRank</div>
+            <div class="card-title">Find the Most Important Chunks</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              We build a graph where every chunk is a node. If two chunks are semantically similar (embeddings are close), we draw an edge between them. Then we run the <strong>PageRank algorithm</strong> — the same one Google uses to rank web pages — to find which chunks are most "central" to the handbook.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>Like Google ranking websites. A chunk connected to many other important chunks (core policy rules) ranks higher than an isolated edge-case chunk.</span>
+            </div>
+            <div class="formula">
+              Similarity graph: edge if cosine(emb_i, emb_j) &gt; 0.65<br>
+              PageRank weight in final score: 0.02 (tiebreaker only)<br>
+              Damping factor: 0.85
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-amber">PageRank</span>
+              <span class="tag tag-blue">networkx library</span>
+              <span class="tag tag-green">weight = 0.02</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b6">
+      <div class="step-dot">7</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b6')">
+          <div class="card-icon" style="background:rgba(59,130,246,0.12);">📑</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 7 · TF-IDF Index</div>
+            <div class="card-title">Build the Keyword Search Engine</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              <strong>TF-IDF</strong> (Term Frequency × Inverse Document Frequency) scores how important each word is to each chunk. Common words like "student" appear everywhere so they get low scores. Rare specific words like "CGPA" or "probation" appear in few chunks so they get high scores — making those chunks findable.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Improvements we made</div>
+                <div class="detail-box-val">Domain stop-words: removed "nust", "university", "student", "handbook" — they appear everywhere and are useless<br><br>Bigrams: index pairs like "credit hours", "grade point"<br><br>Synonym expansion: "GPA" → also indexes "cgpa grade point average"</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">Settings</div>
+                <div class="detail-box-val">15,000 max features<br>sublinear_tf = True (log scale)<br>max_df = 0.85 (drop words in 85%+ of chunks)<br>ngram_range = (1,2)</div>
+              </div>
+            </div>
+            <div class="formula">
+              TF-IDF(word, chunk) = TF × IDF<br>
+              TF = log(1 + count) [sublinear]<br>
+              IDF = log(total_chunks / chunks_with_word)
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">TF-IDF</span>
+              <span class="tag tag-green">15k features</span>
+              <span class="tag tag-amber">bigrams</span>
+              <span class="tag tag-purple">synonym expansion</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b7">
+      <div class="step-dot">8</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b7')">
+          <div class="card-icon" style="background:rgba(139,92,246,0.12);">⚡</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 8 · MinHash + LSH Index</div>
+            <div class="card-title">Build the Fast Approximate Search Engine</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              TF-IDF is exact but slow on huge datasets. <strong>MinHash + LSH</strong> is an approximate method that's much faster — it trades a small amount of accuracy for a big speed gain.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="mini-steps">
+              <div class="mini-step"><div class="mini-step-num">1</div><strong>Shingles:</strong> Each chunk becomes a set of 3-word sequences ("minimum cgpa required", "cgpa required for", …)</div>
+              <div class="mini-step"><div class="mini-step-num">2</div><strong>MinHash:</strong> Apply 128 hash functions to the shingle set → get a 128-number "signature". Two similar chunks will have similar signatures.</div>
+              <div class="mini-step"><div class="mini-step-num">3</div><strong>LSH Banding:</strong> Split the 128 numbers into 16 groups of 8. Hash each group into a "bucket". If two chunks land in the same bucket for any group → they're candidates for being similar.</div>
+              <div class="mini-step"><div class="mini-step-num">4</div>At query time: only compare against chunks that share a bucket. Much faster than comparing against all chunks.</div>
+            </div>
+            <div class="formula">
+              128 hash functions ÷ 16 bands = 8 rows per band<br>
+              Jaccard threshold s* = (1/16)^(1/8) ≈ 0.707<br>
+              Collision probability at s*: 50%
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-purple">MinHash</span>
+              <span class="tag tag-blue">128 hash functions</span>
+              <span class="tag tag-amber">16 bands</span>
+              <span class="tag tag-green">s* ≈ 0.707</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="b8">
+      <div class="step-dot">9</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('b8')">
+          <div class="card-icon" style="background:rgba(16,185,129,0.12);">💾</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 9 · Save Everything</div>
+            <div class="card-title">Store the Index to Disk</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              All the computed data is saved to the <code>handbook-1.0/</code> folder as binary files. This means you only run <code>build_index.py</code> once — every time the server starts, it just loads these files from disk in seconds.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">chunks.pkl</div>
+                <div class="detail-box-val">All chunk text + embeddings + PageRank scores</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">tfidf.pkl</div>
+                <div class="detail-box-val">TF-IDF vectorizer + the full matrix</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">lsh.pkl</div>
+                <div class="detail-box-val">MinHasher + all 300+ signatures + LSH index</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">embed_model/</div>
+                <div class="detail-box-val">The sentence-transformer model weights</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-green">Run once only</span>
+              <span class="tag tag-blue">handbook-1.0/ folder</span>
+              <span class="tag tag-amber">~2–3 min on CPU</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-build -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2 — QUERY WORKFLOW
+  ══════════════════════════════════════════════ -->
+  <div id="tab-query" class="timeline" style="display:none">
+
+    <div class="step-card" id="q0">
+      <div class="step-dot">1</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q0')">
+          <div class="card-icon" style="background:rgba(59,130,246,0.12);">⌨️</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 1 · User Input</div>
+            <div class="card-title">User Types a Question</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              The user types a question in the chat box. For example: <em>"What is the minimum GPA requirement for UG students?"</em>. This is sent to the FastAPI server via an HTTP request.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="answer-preview">
+              <strong>Example query:</strong><br>
+              "What is the minimum GPA requirement for UG students?"
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">FastAPI</span>
+              <span class="tag tag-green">GET /generate?prompt=...</span>
+              <span class="tag tag-amber">SSE streaming response</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q1">
+      <div class="step-dot">2</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q1')">
+          <div class="card-icon" style="background:rgba(239,68,68,0.12);">🧹</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 2 · Query Cleaning</div>
+            <div class="card-title">Clean and Fix the Query</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              The raw query is cleaned: lowercased, special characters removed — but we keep dots, hyphens, and percent signs because they matter for academic queries.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">⚠️</span>
+              <span><strong>Bug we fixed:</strong> The old cleaner removed dots, so "2.75 GPA" became "275 GPA" — completely wrong. Now dots are preserved.</span>
+            </div>
+            <div class="formula">
+              Input:  "What is the minimum GPA requirement?"<br>
+              Output: "what is the minimum gpa requirement"<br><br>
+              Keeps: letters, digits, spaces, . - %<br>
+              Removes: ? ! " ' ( ) and other punctuation
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q2">
+      <div class="step-dot">3</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q2')">
+          <div class="card-icon" style="background:rgba(245,158,11,0.12);">🔄</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 3 · Synonym Expansion</div>
+            <div class="card-title">Add Synonym Tokens to Match Handbook Vocabulary</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              TF-IDF is a pure keyword engine — it doesn't know that "GPA" and "CGPA" mean the same thing. We append synonyms to the query so it matches handbook chunks that use different vocabulary.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">⚠️</span>
+              <span><strong>Bug we fixed:</strong> Students ask "GPA" but the handbook says "CGPA" everywhere. The old system returned 0 matches. Now both words are in the query.</span>
+            </div>
+            <div class="formula">
+              "what is the minimum gpa requirement"<br>
+              → adds: "cgpa grade point average"<br>
+              → adds: "undergraduate" (if "ug" detected)<br>
+              → adds: "attendance present absent shortage" (if "attendance")<br>
+              → full expanded query sent to TF-IDF
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-amber">GPA ↔ CGPA</span>
+              <span class="tag tag-blue">UG ↔ undergraduate</span>
+              <span class="tag tag-green">fail ↔ repeat</span>
+              <span class="tag tag-purple">thesis ↔ dissertation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q3">
+      <div class="step-dot">4</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q3')">
+          <div class="card-icon" style="background:rgba(59,130,246,0.12);">🔎</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 4 · TF-IDF Pre-Filter</div>
+            <div class="card-title">Fast Keyword Search → Top 40 Candidates</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              The expanded query is converted to a TF-IDF vector and compared against all 300+ chunk vectors. Chunks scoring above 0.005 are kept as candidates — chunks with zero keyword overlap are excluded entirely.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">⚠️</span>
+              <span><strong>Bug we fixed:</strong> Without this gate, high-PageRank chunks about Islamic etiquette were appearing in GPA query results because they scored 0 on TF-IDF but had high PageRank. Gate prevents this.</span>
+            </div>
+            <div class="formula">
+              cosine_similarity(query_vec, chunk_vec) for all chunks<br>
+              Keep: score &gt; MIN_TFIDF_SCORE (0.005) AND top 40<br>
+              Discard: anything with zero keyword overlap
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Input</div>
+                <div class="detail-box-val">300+ chunks</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">Output</div>
+                <div class="detail-box-val">Top 40 keyword-relevant candidates</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">exact baseline</span>
+              <span class="tag tag-green">O(vocab × chunks)</span>
+              <span class="tag tag-amber">MIN_TFIDF = 0.005</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q4">
+      <div class="step-dot">5</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q4')">
+          <div class="card-icon" style="background:rgba(6,182,212,0.12);">🧠</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 5 · Semantic Re-Ranking</div>
+            <div class="card-title">Score by Meaning, Not Just Keywords</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              The query is embedded using the sentence-transformer model (the original cleaned query, not the expanded one — synonym noise would hurt embedding quality). We compute dot-product similarity between the query embedding and each of the 40 candidate chunk embeddings.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">💡</span>
+              <span>TF-IDF found chunks with matching words. Semantic scoring finds chunks with matching meaning — even if they use different words.</span>
+            </div>
+            <div class="formula">
+              semantic_score = dot_product(query_embedding, chunk_embedding)<br>
+              Both vectors are L2-normalised → result = cosine similarity<br>
+              Range: -1 to +1 (closer to 1 = more similar meaning)
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-blue">all-MiniLM-L6-v2</span>
+              <span class="tag tag-green">cosine similarity</span>
+              <span class="tag tag-purple">semantic weight = 0.28</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q5">
+      <div class="step-dot">6</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q5')">
+          <div class="card-icon" style="background:rgba(16,185,129,0.12);">⚖️</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 6 · Hybrid Scoring</div>
+            <div class="card-title">Combine All Signals Into One Score</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              Each of the 40 candidates gets a final hybrid score combining TF-IDF keyword match, semantic meaning similarity, and PageRank importance. We sort and return the top 8.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="formula">
+              score = 0.70 × TF-IDF_cosine<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.28 × Semantic_cosine<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.02 × PageRank<br><br>
+              Top 8 chunks returned as "Retrieved Evidence"
+            </div>
+            <div class="analogy">
+              <span class="analogy-icon">⚠️</span>
+              <span><strong>Fix applied:</strong> PageRank was 0.15 (too high) — it was promoting irrelevant but popular chunks. Reduced to 0.02 so it's a tiebreaker only.</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <div class="detail-box-label">Input</div>
+                <div class="detail-box-val">40 candidates with TF-IDF, semantic, and PageRank scores</div>
+              </div>
+              <div class="detail-box">
+                <div class="detail-box-label">Output</div>
+                <div class="detail-box-val">Top 8 chunks → shown in the evidence panel on the right side of the UI</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q6">
+      <div class="step-dot">7</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q6')">
+          <div class="card-icon" style="background:rgba(139,92,246,0.12);">🤖</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 7 · Groq Generation</div>
+            <div class="card-title">Send Top Chunks to AI for a Clean Answer</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              The top 5 retrieved chunks are sent to the <strong>Groq API</strong> (Llama 3.1 8B) along with the original question. The model reads only those chunks and forms a complete, accurate answer. It streams back word by word.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="analogy">
+              <span class="analogy-icon">⚠️</span>
+              <span><strong>Why not flan-t5-base?</strong> Our original local model (250M params) gave one-word answers and couldn't reproduce tables. Groq's Llama 3.1 8B is free, fast, and handles complex answers correctly.</span>
+            </div>
+            <div class="mini-steps">
+              <div class="mini-step"><div class="mini-step-num">1</div>Build clean context: top 5 chunks numbered [Chunk 1]…[Chunk 5] — no source tags inline (they leaked into answers)</div>
+              <div class="mini-step"><div class="mini-step-num">2</div>System prompt: "Answer ONLY from these chunks. Reproduce tables fully. Don't make anything up."</div>
+              <div class="mini-step"><div class="mini-step-num">3</div>Groq streams answer tokens → each token sent to browser via SSE (appears word by word)</div>
+              <div class="mini-step"><div class="mini-step-num">4</div>Python appends citations: Sources: [ug-handbook, p.14] [ug-handbook, p.15]</div>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-purple">Groq API</span>
+              <span class="tag tag-blue">llama-3.1-8b-instant</span>
+              <span class="tag tag-green">FREE tier</span>
+              <span class="tag tag-amber">temperature = 0.1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card" id="q7">
+      <div class="step-dot">8</div>
+      <div class="card-body">
+        <div class="card-header" onclick="toggleCard('q7')">
+          <div class="card-icon" style="background:rgba(16,185,129,0.12);">✅</div>
+          <div class="card-title-wrap">
+            <div class="card-phase">Step 8 · Validate + Display</div>
+            <div class="card-title">Check the Answer and Show It</div>
+          </div>
+          <span class="done-check">✓ Done</span>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-content">
+          <div class="card-inner">
+            <div class="card-desc">
+              After generation, the answer is validated. If it's shorter than 5 words, starts with "Not found", or echoes the prompt — it's replaced with an extractive fallback. Valid answers are displayed with clean citations appended.
+            </div>
+            <div class="flow-bar"></div>
+            <div class="answer-preview">
+              <strong>Example final answer:</strong><br><br>
+              The minimum CGPA required for continuation in the degree programme is 2.75 for Engineering, IT, CS, Natural &amp; Applied Biosciences, Architecture &amp; Industrial Design, and 3.00 for UG degree programmes of NBS and S3H.<br><br>
+              <em>*Sources: [ug-handbook, p.14]  [ug-handbook, p.15]*</em>
+            </div>
+            <div class="tag-row">
+              <span class="tag tag-green">answer shown in chat</span>
+              <span class="tag tag-blue">8 chunks in evidence panel</span>
+              <span class="tag tag-amber">citations appended</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-query -->
+
+  <!-- Completion banners -->
+  <div class="completion-banner" id="banner-build">
+    <h3>Phase 1 Complete — Library Built!</h3>
+    <p>The index is saved to handbook-1.0/. Run server.py — the system is ready to answer questions.</p>
+  </div>
+  <div class="completion-banner" id="banner-query">
+    <h3>Query Answered!</h3>
+    <p>From raw question to grounded answer in under 2 seconds.</p>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ──────────────────────────────────────
+   State
+────────────────────────────────────── */
+let currentTab    = 'build';
+let animRunning   = false;
+let animTimer     = null;
+let currentStep   = -1;
+
+const tabs = {
+  build: ['b0','b1','b2','b3','b4','b5','b6','b7','b8'],
+  query: ['q0','q1','q2','q3','q4','q5','q6','q7'],
+};
+
+/* ──────────────────────────────────────
+   Tab switching
+────────────────────────────────────── */
+function switchTab(tab) {
+  stopAnimation();
+  currentTab = tab;
+
+  document.getElementById('tab-build').style.display = tab === 'build' ? 'block' : 'none';
+  document.getElementById('tab-query').style.display = tab === 'query' ? 'block' : 'none';
+
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'build') || (i === 1 && tab === 'query'));
+  });
+
+  resetSteps();
+  document.getElementById('banner-build').classList.remove('show');
+  document.getElementById('banner-query').classList.remove('show');
+}
+
+/* ──────────────────────────────────────
+   Card toggle
+────────────────────────────────────── */
+function toggleCard(id) {
+  const card    = document.getElementById(id);
+  const body    = card.querySelector('.card-body');
+  const content = card.querySelector('.card-content');
+  const open    = content.classList.contains('open');
+  content.classList.toggle('open', !open);
+  body.classList.toggle('expanded', !open);
+}
+
+function openCard(id) {
+  const card    = document.getElementById(id);
+  const body    = card.querySelector('.card-body');
+  const content = card.querySelector('.card-content');
+  content.classList.add('open');
+  body.classList.add('expanded');
+}
+
+/* ──────────────────────────────────────
+   Animation
+────────────────────────────────────── */
+function getSpeed() {
+  return parseInt(document.getElementById('speedSel').value);
+}
+
+function resetSteps() {
+  const steps = tabs[currentTab];
+  steps.forEach(id => {
+    const card = document.getElementById(id);
+    if (!card) return;
+    card.classList.remove('visible', 'active', 'done');
+    const content = card.querySelector('.card-content');
+    const body    = card.querySelector('.card-body');
+    content.classList.remove('open');
+    body.classList.remove('expanded');
+  });
+  currentStep = -1;
+  updateCounter(0, tabs[currentTab].length);
+  updateProgress(0, tabs[currentTab].length);
+}
+
+function updateCounter(cur, total) {
+  document.getElementById('curStep').textContent  = cur;
+  document.getElementById('totalSteps').textContent = total;
+}
+
+function updateProgress(cur, total) {
+  const pct = total > 0 ? (cur / total) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function startAnimation() {
+  if (animRunning) { stopAnimation(); return; }
+  resetSteps();
+
+  const btn   = document.getElementById('runBtn');
+  btn.innerHTML = '<span class="icon">⏸</span> Pause';
+  animRunning = true;
+
+  const steps  = tabs[currentTab];
+  const speed  = getSpeed();
+  let   step   = 0;
+
+  function runStep() {
+    if (!animRunning || step >= steps.length) {
+      if (step >= steps.length) {
+        // completion
+        const banner = document.getElementById(`banner-${currentTab}`);
+        if (banner) banner.classList.add('show');
+        btn.innerHTML = '<span class="icon">▶</span> Run Walkthrough';
+        animRunning = false;
+        updateCounter(steps.length, steps.length);
+        updateProgress(steps.length, steps.length);
+      }
+      return;
+    }
+
+    const id   = steps[step];
+    const card = document.getElementById(id);
+
+    // Mark previous as done
+    if (step > 0) {
+      const prevCard = document.getElementById(steps[step - 1]);
+      prevCard.classList.remove('active');
+      prevCard.classList.add('done');
+    }
+
+    // Make visible + active + auto-open
+    card.classList.add('visible', 'active');
+    openCard(id);
+
+    // Scroll into view gently
+    setTimeout(() => {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    currentStep = step;
+    updateCounter(step + 1, steps.length);
+    updateProgress(step + 1, steps.length);
+
+    step++;
+    animTimer = setTimeout(runStep, speed * 2.5);
+  }
+
+  // Make all cards visible first (opacity 0 → then animate)
+  steps.forEach(id => {
+    const card = document.getElementById(id);
+    card.classList.add('visible');
+  });
+
+  setTimeout(runStep, 300);
+}
+
+function stopAnimation() {
+  animRunning = false;
+  clearTimeout(animTimer);
+  const btn = document.getElementById('runBtn');
+  btn.innerHTML = '<span class="icon">▶</span> Run Walkthrough';
+}
+
+/* ──────────────────────────────────────
+   Init
+────────────────────────────────────── */
+window.addEventListener('load', () => {
+  updateCounter(0, tabs[currentTab].length);
+  updateProgress(0, tabs[currentTab].length);
+
+  // Make all cards in current tab visible at start (no animation yet)
+  tabs[currentTab].forEach(id => {
+    const card = document.getElementById(id);
+    if (card) card.classList.add('visible');
+  });
+});
+</script>
+</body>
+</html>
