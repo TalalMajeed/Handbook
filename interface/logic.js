@@ -70,16 +70,42 @@ function createTyping() {
 
 function openModal(chunk) {
     const srcLabel = (chunk.source || "handbook").replace(/\.pdf$/i, "");
+
+    const hybrid = chunk.score ?? 0;
+    const tfidf = chunk.score_tfidf ?? 0;
+    const semantic = chunk.score_semantic ?? 0;
+    const pagerank = chunk.score_pagerank ?? 0;
+    const jaccard = chunk.score_jaccard ?? 0;
+
+    // ── Header: rank / source / page / method + all score badges in one row ──
     modalMeta.innerHTML = `
         <span class="chunk-rank">#${chunk.rank}</span>
         <span class="chunk-source-badge" title="${escapeHtml(chunk.source || '')}">
             ${escapeHtml(srcLabel)}
         </span>
         <span class="chunk-page-badge">Page ${escapeHtml(String(chunk.page))}</span>
-        <span class="method-badge">${escapeHtml(chunk.method || "hybrid")}</span>
-        <span class="chunk-score">score: ${chunk.score}</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;margin-left:4px;">
+            <span title="Hybrid final score" style="font-family:monospace;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#60a5fa;">
+                H&nbsp;${hybrid}
+            </span>
+            <span title="TF-IDF cosine similarity" style="font-family:monospace;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);color:#7dd3fc;">
+                TF&nbsp;${tfidf}
+            </span>
+            <span title="Semantic cosine similarity" style="font-family:monospace;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#6ee7b7;">
+                SEM&nbsp;${semantic}
+            </span>
+            <span title="PageRank score" style="font-family:monospace;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fcd34d;">
+                PR&nbsp;${pagerank}
+            </span>
+        </span>
     `;
-    modalBody.textContent = chunk.fullText || chunk.text || "";
+
+    // ── Full chunk text only — no panel below ──
+    modalBody.innerHTML =
+        `<div style="white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.8;color:#cbd5e1;">` +
+        escapeHtml(chunk.fullText || chunk.text || "") +
+        `</div>`;
+
     chunkModal.classList.add("open");
     document.body.style.overflow = "hidden";
 }

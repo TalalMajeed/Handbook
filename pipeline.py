@@ -221,6 +221,9 @@ class HandbookPipeline:
         # synonym noise in the expanded string degrades embedding quality
         q_emb = self.embed_model.encode([cleaned], normalize_embeddings=True)[0]
 
+        # Pre-compute query MinHash signature once for Jaccard estimates
+        q_sig = self.minhaser.signature(cleaned)
+
         scored = []
         for i in idxs:
             c      = self.chunks[i]
@@ -228,21 +231,31 @@ class HandbookPipeline:
             tfidf  = float(scores[i])
             pr     = c.get("pagerank", 0.0)
             hybrid = ALPHA_TFIDF * tfidf + ALPHA_SEMANTIC * sem + ALPHA_PAGERANK * pr
-            scored.append((c, hybrid))
+            # MinHash Jaccard estimate — fraction of matching hash values
+            jaccard = float(np.mean(q_sig == self.minhash_sigs[i]))
+            scored.append((c, hybrid, tfidf, sem, pr, jaccard))
 
         scored.sort(key=lambda x: x[1], reverse=True)
 
         # Debug output — set LOG_LEVEL=DEBUG to see during development
-        for rank, (c, h) in enumerate(scored[:3]):
+        for rank, (c, h, tf, se, pr, jac) in enumerate(scored[:3]):
             logger.debug(
-                "rank=%d  page=%-4s  score=%.4f  | %s",
-                rank + 1, c.get("page"), h,
-                c.get("text", "")[:100].replace("\n", " ")
+                "rank=%d  page=%-4s  hybrid=%.4f  tfidf=%.4f  sem=%.4f  pr=%.4f  jac=%.4f | %s",
+                rank + 1, c.get("page"), h, tf, se, pr, jac,
+                c.get("text", "")[:80].replace("\n", " ")
             )
 
         return [
-            {**c, "score": float(s), "method": "hybrid"}
-            for c, s in scored[:top_k]
+            {
+                **c,
+                "score":          round(hybrid,   4),
+                "score_tfidf":    round(tfidf,    4),
+                "score_semantic": round(sem,       4),
+                "score_pagerank": round(pr,        4),
+                "score_jaccard":  round(jaccard,   4),
+                "method": "hybrid",
+            }
+            for c, hybrid, tfidf, sem, pr, jaccard in scored[:top_k]
         ]
 
     # ── 4. Benchmarking utility ────────────────────────────────────────────────

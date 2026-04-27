@@ -176,13 +176,17 @@ def sse_event(event: str, data: str = "") -> str:
 def format_chunk_for_client(chunk: dict, rank: int) -> dict:
     full_text = chunk.get("text", "")
     return {
-        "rank":    rank + 1,
-        "text":    full_text,
-        "preview": full_text[:280],
-        "page":    chunk.get("page",   "?"),
-        "source":  chunk.get("source", "handbook.pdf"),
-        "score":   round(chunk.get("score", 0.0), 4),
-        "method":  chunk.get("method", "hybrid"),
+        "rank":           rank + 1,
+        "text":           full_text,
+        "preview":        full_text[:280],
+        "page":           chunk.get("page",   "?"),
+        "source":         chunk.get("source", "handbook.pdf"),
+        "score":          round(chunk.get("score",          0.0), 4),
+        "score_tfidf":    round(chunk.get("score_tfidf",    0.0), 4),
+        "score_semantic": round(chunk.get("score_semantic", 0.0), 4),
+        "score_pagerank": round(chunk.get("score_pagerank", 0.0), 4),
+        "score_jaccard":  round(chunk.get("score_jaccard",  0.0), 4),
+        "method":         chunk.get("method", "hybrid"),
     }
 
 
